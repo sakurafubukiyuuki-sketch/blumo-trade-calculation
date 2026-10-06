@@ -1,0 +1,8 @@
+server:
+  port: 1111
+
+spring:
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+    deserialization:
+      accept-float-as-int: false
