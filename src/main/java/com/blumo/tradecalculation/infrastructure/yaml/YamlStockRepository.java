@@ -12,24 +12,12 @@ import java.util.List;
 import java.util.Map;
 
 @Repository
-public class YamlStockRepository implements StockRepository {
+public final class YamlStockRepository implements StockRepository {
 
     private final Map<String, Stock> stocksByTicker;
 
     public YamlStockRepository() {
-        List<StockFileRecord> records = YamlResources.read(
-                "stocks.yaml",
-                new TypeReference<List<StockFileRecord>>() {
-                }
-        );
-        Map<String, Stock> loaded = new LinkedHashMap<>();
-        for (StockFileRecord record : records) {
-            if (loaded.containsKey(record.ticker())) {
-                throw new InconsistentStockDataException("duplicate stock. ticker=" + record.ticker());
-            }
-            loaded.put(record.ticker(), new Stock(record.ticker(), record.price(), record.tradable()));
-        }
-        this.stocksByTicker = Map.copyOf(loaded);
+        stocksByTicker = loadStocks();
     }
 
     @Override
@@ -42,5 +30,21 @@ public class YamlStockRepository implements StockRepository {
             }
         }
         return stocks;
+    }
+
+    private static Map<String, Stock> loadStocks() {
+        List<StockFileRecord> records = YamlResources.read(
+                "stocks.yaml",
+                new TypeReference<List<StockFileRecord>>() {
+                }
+        );
+        Map<String, Stock> loaded = new LinkedHashMap<>();
+        for (StockFileRecord record : records) {
+            if (loaded.containsKey(record.ticker())) {
+                throw new InconsistentStockDataException("duplicate stock. ticker=" + record.ticker());
+            }
+            loaded.put(record.ticker(), new Stock(record.ticker(), record.price(), record.tradable()));
+        }
+        return Map.copyOf(loaded);
     }
 }

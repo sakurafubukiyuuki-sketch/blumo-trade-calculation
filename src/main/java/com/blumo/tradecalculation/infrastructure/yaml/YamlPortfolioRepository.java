@@ -14,11 +14,20 @@ import java.util.Map;
 import java.util.Optional;
 
 @Repository
-public class YamlPortfolioRepository implements PortfolioRepository {
+public final class YamlPortfolioRepository implements PortfolioRepository {
 
     private final Map<String, TargetPortfolio> portfoliosByUserId;
 
     public YamlPortfolioRepository() {
+        portfoliosByUserId = loadPortfolios();
+    }
+
+    @Override
+    public Optional<TargetPortfolio> findByUserId(String userId) {
+        return Optional.ofNullable(portfoliosByUserId.get(userId));
+    }
+
+    private static Map<String, TargetPortfolio> loadPortfolios() {
         List<PortfolioFileRecord> records = YamlResources.read(
                 "portfolios.yaml",
                 new TypeReference<List<PortfolioFileRecord>>() {
@@ -32,15 +41,10 @@ public class YamlPortfolioRepository implements PortfolioRepository {
             }
             loaded.put(userId, toTargetPortfolio(userId, record));
         }
-        this.portfoliosByUserId = Map.copyOf(loaded);
+        return Map.copyOf(loaded);
     }
 
-    @Override
-    public Optional<TargetPortfolio> findByUserId(String userId) {
-        return Optional.ofNullable(portfoliosByUserId.get(userId));
-    }
-
-    private TargetPortfolio toTargetPortfolio(String userId, PortfolioFileRecord record) {
+    private static TargetPortfolio toTargetPortfolio(String userId, PortfolioFileRecord record) {
         List<Holding> holdings = new ArrayList<>();
         for (Map.Entry<String, Integer> entry : record.targetPortfolio().entrySet()) {
             holdings.add(new Holding(entry.getKey(), entry.getValue()));
